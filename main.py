@@ -18,9 +18,12 @@ ALL_KEYWORDS = KEYWORDS_IT + KEYWORDS_EN
 # Esempio: 'nomeutente' (senza @)
 # ============================================================
 COMPETITOR_ACCOUNTS = [
-    'competitor1_username',  # <-- sostituisci con i veri username
-    'competitor2_username',
-    'competitor3_username',
+    'federico picchianti',
+    'maryjbaccaglini',
+    'federicoseverino',
+    'lucaromito',
+    'monica ricci',
+    'benedetta gherardini',
 ]
 
 SOURCES_IT = [
