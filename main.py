@@ -13,6 +13,16 @@ KEYWORDS_IT = ['amore','relazione','relazioni','coppia','coppie','sesso','tradim
 KEYWORDS_EN = ['love','relationship','relationships','dating','sex','breakup','marriage','couple','couples','cheating','infidelity','jealousy','loneliness','self-esteem','attachment','toxic','narcissist','narcissism','manipulation','heartbreak','flirting','seduction','attraction','divorce','affair','emotional abuse','red flags','ghosting','situationship','trauma bond']
 ALL_KEYWORDS = KEYWORDS_IT + KEYWORDS_EN
 
+# ============================================================
+# COMPETITOR INSTAGRAM — aggiungi qui gli username dei tuoi competitor
+# Esempio: 'nomeutente' (senza @)
+# ============================================================
+COMPETITOR_ACCOUNTS = [
+    'competitor1_username',  # <-- sostituisci con i veri username
+    'competitor2_username',
+    'competitor3_username',
+]
+
 SOURCES_IT = [
     {'name': 'iO Donna', 'url': 'https://www.iodonna.it/amore/feed/'},
     {'name': 'Corriere della Sera', 'url': 'https://www.corriere.it/rss/lifestyle.xml'},
@@ -45,10 +55,12 @@ SOURCES_EN = [
 
 ALL_SOURCES = SOURCES_IT + SOURCES_EN
 
+
 def get_yesterday():
     now = datetime.now(ROME)
     yesterday = now - timedelta(days=1)
     return yesterday.date()
+
 
 def parse_date(entry):
     try:
@@ -60,6 +72,7 @@ def parse_date(entry):
         pass
     return None
 
+
 def matches_keywords(text):
     text_lower = text.lower()
     for kw in ALL_KEYWORDS:
@@ -67,6 +80,7 @@ def matches_keywords(text):
         if re.search(pattern, text_lower):
             return True
     return False
+
 
 def translate_title(title):
     try:
@@ -76,6 +90,7 @@ def translate_title(title):
         return result.text
     except:
         return title
+
 
 def scrape_source(source):
     articles = []
@@ -98,15 +113,83 @@ def scrape_source(source):
         print(f'Errore {source["name"]}: {e}')
     return articles
 
+
+def scrape_instagram_competitor(username):
+    """Recupera i post Instagram di ieri da un profilo pubblico."""
+    posts_found = []
+    yesterday = get_yesterday()
+    try:
+        import instaloader
+        L = instaloader.Instaloader(
+            download_pictures=False,
+            download_videos=False,
+            download_video_thumbnails=False,
+            download_geotags=False,
+            download_comments=False,
+            save_metadata=False,
+            quiet=True
+        )
+        profile = instaloader.Profile.from_username(L.context, username)
+        for post in profile.get_posts():
+            post_date = post.date_utc.astimezone(ROME).date()
+            # Ferma se arriviamo a post troppo vecchi
+            if post_date < yesterday:
+                break
+            if post_date == yesterday:
+                caption = post.caption or ''
+                first_line = caption.split('\n')[0][:120].strip()
+                if not first_line:
+                    first_line = '[nessuna didascalia]'
+                post_url = f'https://www.instagram.com/p/{post.shortcode}/'
+                posts_found.append({
+                    'title': first_line,
+                    'link': post_url,
+                    'likes': post.likes,
+                    'type': 'VIDEO' if post.is_video else 'POST'
+                })
+    except Exception as e:
+        print(f'Errore Instagram @{username}: {e}')
+        return None  # None = errore, lista vuota = nessun post ieri
+    return posts_found
+
+
+def build_competitors_section():
+    """Costruisce la sezione competitor Instagram per il report."""
+    if not COMPETITOR_ACCOUNTS or COMPETITOR_ACCOUNTS[0] == 'competitor1_username':
+        return '', 0  # Placeholder non ancora configurato
+    lines = []
+    total_posts = 0
+    for username in COMPETITOR_ACCOUNTS:
+        result = scrape_instagram_competitor(username)
+        if result is None:
+            lines.append(f'\U0001f4f7 @{username} \u2192 \u26a0\ufe0f errore nel recupero')
+        elif len(result) == 0:
+            lines.append(f'\U0001f4f7 @{username} \u2192 \u2716 nessun post ieri')
+        else:
+            count = len(result)
+            total_posts += count
+            lines.append(f'\U0001f4f7 @{username} \u2192 {count} post ieri')
+            for i, p in enumerate(result, 1):
+                label = f'[{p["type"]}]' if p['type'] == 'VIDEO' else ''
+                lines.append(f'  {i}. {label} "{p["title"]}" ({p["likes"]} \u2764\ufe0f) \u2192 {p["link"]}')
+    return '\n'.join(lines), total_posts
+
+
 def send_telegram(message):
     url = f'https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage'
-    payload = {'chat_id': TELEGRAM_CHAT_ID, 'text': message, 'parse_mode': 'HTML', 'disable_web_page_preview': True}
+    payload = {
+        'chat_id': TELEGRAM_CHAT_ID,
+        'text': message,
+        'parse_mode': 'HTML',
+        'disable_web_page_preview': True
+    }
     try:
         r = requests.post(url, json=payload, timeout=15)
         return r.status_code == 200
     except Exception as e:
         print(f'Errore Telegram: {e}')
         return False
+
 
 def build_section(sources):
     lines = []
@@ -123,26 +206,65 @@ def build_section(sources):
                 lines.append(f'  {i}. "{a["title"]}" \u2192 {a["link"]}')
     return '\n'.join(lines), total
 
+
 def run():
     yesterday = get_yesterday()
-    date_str = yesterday.strftime('%-d %B %Y').replace('January','Gennaio').replace('February','Febbraio').replace('March','Marzo').replace('April','Aprile').replace('May','Maggio').replace('June','Giugno').replace('July','Luglio').replace('August','Agosto').replace('September','Settembre').replace('October','Ottobre').replace('November','Novembre').replace('December','Dicembre')
+    date_str = yesterday.strftime('%-d %B %Y')\
+        .replace('January','Gennaio').replace('February','Febbraio')\
+        .replace('March','Marzo').replace('April','Aprile')\
+        .replace('May','Maggio').replace('June','Giugno')\
+        .replace('July','Luglio').replace('August','Agosto')\
+        .replace('September','Settembre').replace('October','Ottobre')\
+        .replace('November','Novembre').replace('December','Dicembre')
 
     print(f'Avvio briefing per {date_str}...')
 
     it_text, it_total = build_section(SOURCES_IT)
     en_text, en_total = build_section(SOURCES_EN)
+    comp_text, comp_total = build_competitors_section()
     grand_total = it_total + en_total
 
-    msg1 = f'\U0001f4cb BRIEFING LOVE COACH \u2014 {date_str} (Parte 1/2)\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\U0001f1ee\U0001f1f9 FONTI ITALIANE\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n{it_text}'
-    msg2 = f'\U0001f4cb BRIEFING LOVE COACH \u2014 {date_str} (Parte 2/2)\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\U0001f30d FONTI INTERNAZIONALI\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n{en_text}\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\u2705 Articoli rilevanti oggi: {grand_total}'
+    # Messaggio 1: fonti italiane
+    msg1 = (
+        f'\U0001f4cb BRIEFING LOVE COACH \u2014 {date_str} (1/3)\n'
+        f'\u2501' * 22 + '\n'
+        f'\U0001f1ee\U0001f1f9 FONTI ITALIANE\n'
+        f'\u2501' * 22 + '\n'
+        f'{it_text}'
+    )
 
-    # Split messages if too long
-    for msg in [msg1, msg2]:
+    # Messaggio 2: fonti internazionali
+    msg2 = (
+        f'\U0001f4cb BRIEFING LOVE COACH \u2014 {date_str} (2/3)\n'
+        f'\u2501' * 22 + '\n'
+        f'\U0001f30d FONTI INTERNAZIONALI\n'
+        f'\u2501' * 22 + '\n'
+        f'{en_text}\n'
+        f'\u2501' * 22 + '\n'
+        f'\u2705 Articoli rilevanti oggi: {grand_total}'
+    )
+
+    # Messaggio 3: competitor Instagram
+    if comp_text:
+        msg3 = (
+            f'\U0001f4cb BRIEFING LOVE COACH \u2014 {date_str} (3/3)\n'
+            f'\u2501' * 22 + '\n'
+            f'\U0001f575\ufe0f COMPETITOR INSTAGRAM\n'
+            f'\u2501' * 22 + '\n'
+            f'{comp_text}\n'
+            f'\u2501' * 22 + '\n'
+            f'\U0001f4f7 Post competitor ieri: {comp_total}'
+        )
+    else:
+        msg3 = None
+
+    for msg in ([msg1, msg2] + ([msg3] if msg3 else [])):
         chunks = [msg[i:i+4000] for i in range(0, len(msg), 4000)]
         for chunk in chunks:
             send_telegram(chunk)
 
-    print(f'Report inviato! Totale articoli: {grand_total}')
+    print(f'Report inviato! Articoli: {grand_total}, Post competitor: {comp_total}')
+
 
 if __name__ == '__main__':
     run()
