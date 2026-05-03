@@ -18,12 +18,25 @@ ALL_KEYWORDS = KEYWORDS_IT + KEYWORDS_EN
 # Esempio: 'nomeutente' (senza @)
 # ============================================================
 COMPETITOR_ACCOUNTS = [
+    # Competitor gruppo 1 (6)
     'federico picchianti',
     'maryjbaccaglini',
     'federicoseverino',
     'lucaromito',
     'monica ricci',
     'benedetta gherardini',
+    # Competitor gruppo 2 (11)
+    'psicologiamanipolativa',
+    'laexincazzata',
+    'serenis.it',
+    'dr.enrico.gamba',
+    'drfantechi',
+    'danieledibenedetti',
+    'maurizioromano83',
+    'rob_wildside',
+    'dr.matteosinattipsicologo',
+    'alessiofiorucci',
+    'psicologo_francesco_boz',
 ]
 
 SOURCES_IT = [
