@@ -19,7 +19,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install feedparser requests googletrans==4.0.0rc1 instaloader
+          pip install feedparser requests googletrans==4.0.0rc
 
       - name: Run daily report
         env:
