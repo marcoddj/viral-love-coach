@@ -98,13 +98,8 @@ def matches_keywords(text):
 
 
 def translate_title(title):
-    try:
+        return title  # Translation disabled (googletrans not available)try:
         from googletrans import Translator
-        t = Translator()
-        result = t.translate(title, dest='it')
-        return result.text
-    except:
-        return title
 
 
 def scrape_source(source):
