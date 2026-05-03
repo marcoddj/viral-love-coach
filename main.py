@@ -18,14 +18,14 @@ ALL_KEYWORDS = KEYWORDS_IT + KEYWORDS_EN
 # Esempio: 'nomeutente' (senza @)
 # ============================================================
 COMPETITOR_ACCOUNTS = [
-    # Competitor gruppo 1 (6)
-    'federico picchianti',
+    # Competitor gruppo 1 (6 account)
+    'federicopicchianti',
     'maryjbaccaglini',
     'federicoseverino',
     'lucaromito',
-    'monica ricci',
-    'benedetta gherardini',
-    # Competitor gruppo 2 (11)
+    'dott.monicaricci',
+    'growupordie',
+    # Competitor gruppo 2 (11 account)
     'psicologiamanipolativa',
     'laexincazzata',
     'serenis.it',
