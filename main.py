@@ -17,8 +17,7 @@ ALL_KEYWORDS = KEYWORDS_IT + KEYWORDS_EN
 # COMPETITOR INSTAGRAM — aggiungi qui gli username dei tuoi competitor
 # Esempio: 'nomeutente' (senza @)
 # ============================================================
-COMPETITOR_ACCOUNTS = [
-    # Competitor gruppo 1 (6 account)
+COMPETITOR_ACCOUNTS = []  # Temporaneamente disabilitato - Instagram blocca API    # Competitor gruppo 1 (6 account)
     'federicopicchianti',
     'maryjbaccaglini',
     'federicoseverino',
