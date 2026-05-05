@@ -99,8 +99,12 @@ def matches_keywords(text):
 
 def translate_title(title):
         return title  # Translation disabled (googletrans not available)try:
-        from googletrans import Translator
-
+    try:
+        from deep_translator import GoogleTranslator
+        translated = GoogleTranslator(source='en', target='it').translate(title)
+        return translated if translated else title
+    except:
+        return title
 
 def scrape_source(source):
     articles = []
